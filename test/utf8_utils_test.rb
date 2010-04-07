@@ -7,10 +7,9 @@ require File.expand_path("../../lib/utf8_utils", __FILE__)
 
 module UTF8ByteTest
 
-  def test_leading_1_bits
+  def test_first_zero
     [0, 128, 194, 224, 240].each_with_index do |n, i|
-      byte = UTF8Utils::Byte.new(n)
-      assert_equal i, byte.leading_1_bits
+      assert_equal i, n.first_zero_bit
     end
   end
 

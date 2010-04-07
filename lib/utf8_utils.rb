@@ -51,3 +51,10 @@ class String
     UTF8Utils::Chars.new self
   end
 end
+
+class Fixnum
+  # Returns the offset of the first zero bit, reading from left to right.
+  def first_zero_bit
+    (-7..0).each { |n| return n + 7 if self[n.abs] == 0 } ; nil
+  end
+end

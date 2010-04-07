@@ -5,35 +5,6 @@ module UTF8Utils
 
     attr_reader :byte
 
-    def initialize(byte)
-      @byte = byte
-    end
-
-    def codepoint_mask
-      case leading_1_bits
-      when 0 then 0
-      when 1 then 0b1000_0000
-      when 2 then 0b1100_0000
-      when 3 then 0b1110_0000
-      when 4 then 0b1111_0000
-      end
-    end
-
-    # Is this a continuation byte?
-    def continuation?
-      leading_1_bits == 1
-    end
-
-    # How many continuation bytes should follow this byte?
-    def continuations
-      bits = leading_1_bits
-      bits < 2 ? 0 : bits - 1
-    end
-
-    def invalid?
-      !valid?
-    end
-
     # From Wikipedia's entry on UTF-8:
     #
     # The UTF-8 encoding is variable-width, with each character represented by 1
@@ -43,14 +14,25 @@ module UTF8Utils
     # bit indicates a continuation byte in a multi-byte sequence (this was done for
     # ASCII compatibility).
     # @see http://en.wikipedia.org/wiki/Utf-8
-    def leading_1_bits
-      nibble = byte >> 4
-      if    nibble < 0b1000 then 0 # single-byte chars
-      elsif nibble < 0b1100 then 1 # continuation byte
-      elsif nibble < 0b1110 then 2 # start of 2-byte char
-      elsif nibble < 0b1111 then 3 # 3-byte char
-      else                       4 # 4-byte char
-      end
+    attr :first_zero_bit
+
+    def initialize(byte)
+      @byte = byte
+      @first_zero_bit = byte.first_zero_bit
+    end
+
+    # Is this a continuation byte?
+    def continuation?
+      first_zero_bit == 1
+    end
+
+    # How many continuation bytes should follow this byte?
+    def continuations
+      first_zero_bit < 2 ? 0 : first_zero_bit - 1
+    end
+
+    def invalid?
+      !valid?
     end
 
     # Start of a 2-byte sequence, but code point ≤ 127
@@ -76,10 +58,6 @@ module UTF8Utils
 
     def valid?
       !(overlong? or restricted? or undefined?)
-    end
-
-    def codepoint_bits
-      byte ^ codepoint_mask
     end
 
   end
