@@ -1,0 +1,5 @@
+lib/utf8_utils/version.rb 452622369c106f0262b9a8692dfd20e9aa1ad9b0
+lib/utf8_utils.rb d5891bdbdcb0a1c85e842cc82d13dff1155b18df
+lib/utf8_utils/chars.rb cf55ebf41b488372dac9c4c999ed35a774dd66f8
+lib/utf8_utils/byte.rb 6d988ae8ba68edd3343bef028ae5121c9c183c7f
+lib/utf8_utils/char.rb d6585b31b88755d3c8809897d6c2fd4bee08b08e
