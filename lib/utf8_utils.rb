@@ -55,6 +55,15 @@ end
 class Fixnum
   # Returns the offset of the first zero bit, reading from left to right.
   def first_zero_bit
-    (-7..0).each { |n| return n + 7 if self[n.abs] == 0 } ; nil
+    @first_zero_bit ||= if self[7] == 0 then 0
+    elsif self[6] == 0 then 1
+    elsif self[5] == 0 then 2
+    elsif self[4] == 0 then 3
+    elsif self[3] == 0 then 4
+    elsif self[2] == 0 then 5
+    elsif self[1] == 0 then 6
+    elsif self[0] == 0 then 7
+    else nil
+    end
   end
 end
