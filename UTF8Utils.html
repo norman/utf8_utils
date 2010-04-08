@@ -59,7 +59,7 @@
   
     <dt class="r1 last">Defined in:</dt>
     <dd class="r1 last">lib/utf8_utils.rb<span class="defines">,<br />
-  lib/utf8_utils/char.rb,<br /> lib/utf8_utils/byte.rb,<br /> lib/utf8_utils/chars.rb,<br /> lib/utf8_utils/version.rb</span>
+  lib/utf8_utils/version.rb</span>
 </dd>
   
 </dl>
@@ -68,10 +68,7 @@
 <h2>Overview</h2><div class="docstring">
   <div class="discussion">
     <p>
-Wraps a string as an array of bytes and allows some naive cleanup
-operations as a workaround for Ruby 1.9&#8217;s crappy encoding support
-that throws exceptions when attempting to access UTF8 strings with invalid
-characters.
+Utilities for cleaning up UTF-8 strings with invalid characters.
 </p>
 
 
@@ -83,11 +80,9 @@ characters.
 <p class="children">
    
     
-      <strong class="modules">Modules:</strong> <a href="UTF8Utils/Version.html" title="UTF8Utils::Version (module)">Version</a>
+      <strong class="modules">Modules:</strong> <a href="UTF8Utils/StringExt.html" title="UTF8Utils::StringExt (module)">StringExt</a>, <a href="UTF8Utils/Version.html" title="UTF8Utils::Version (module)">Version</a>
     
    
-    
-      <strong class="classes">Classes:</strong> <a href="UTF8Utils/Byte.html" title="UTF8Utils::Byte (class)">Byte</a>, <a href="UTF8Utils/Char.html" title="UTF8Utils::Char (class)">Char</a>, <a href="UTF8Utils/Chars.html" title="UTF8Utils::Chars (class)">Chars</a>
     
   
 </p>
@@ -96,11 +91,11 @@ characters.
   
     <dl class="constants">
       
-        <dt id="CP1251-constant" class="">CP1251 =
+        <dt id="CP1252-constant" class="">CP1252 =
           <div class="docstring">
   <div class="discussion">
     <p>
-CP1251 decimal byte =&gt; UTF-8 approximation as an array of bytes
+CP1252 decimal byte => UTF-8 approximation as an array of bytes
 </p>
 
 
@@ -156,7 +151,7 @@ CP1251 decimal byte =&gt; UTF-8 approximation as an array of bytes
 </div>
     
     <div id="footer">
-  Generated on Wed Apr  7 00:05:55 2010 by 
+  Generated on Thu Apr  8 00:14:28 2010 by 
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool">yard</a>
   0.5.4 (ruby-1.8.7).
 </div>
