@@ -6,8 +6,10 @@ It provides functionality that replaces [ActiveSupport's `tidy_bytes`
 method](http://api.rubyonrails.org/classes/ActiveSupport/Multibyte/Chars.html#M000977),
 with a faster algorithm that works on 1.8.6 - 1.9.x.
 
-I will be sending this as a patch to ActiveSupport; in the mean time you can
-access at [its home on Github](github.com/norman/utf8_utils).
+I've sent this code [as a patch to
+ActiveSupport](https://rails.lighthouseapp.com/projects/8994/tickets/4350-tidy_bytes-fails-on-19x);
+in the mean time you can access at [its home on
+Github](github.com/norman/utf8_utils).
 
 ## The Problem
 
