@@ -11,7 +11,13 @@ access at [its home on Github](github.com/norman/utf8_utils).
 
 ## The Problem
 
-Here's what happens when you try to access a string with invalid UTF-8 characters in Ruby 1.9:
+Your application may have to deal with invalid UTF-8 strings that come from
+user input that is copied and pasted from Microsoft Word, and includes
+Windows-encoded "smart quotes," or other characters. This is only one scenario;
+there are many ways your application could receive such input.
+
+Here's what happens when you try to access a string with invalid UTF-8
+characters in Ruby 1.9:
 
     ruby-1.9.1-p378 > "my messed up \x92 string".split(//u)
     ArgumentError: invalid byte sequence in UTF-8
@@ -19,17 +25,50 @@ Here's what happens when you try to access a string with invalid UTF-8 character
             from (irb):3
             from /Users/norman/.rvm/rubies/ruby-1.9.1-p378/bin/irb:17:in `<main>'
 
+Ruby is quite particular about this - accessing the data in the string is
+difficult as almost all string access methods will die with this error.
+
 ## The Solution
+
+This library breaks the string down into an array of raw bytes, and cleans up
+the ones that are impossible UTF-8 sequences.
 
     ruby-1.9.1-p378 > "my messed up \x92 string".tidy_bytes.split(//u)
      => ["m", "y", " ", "m", "e", "s", "s", "e", "d", " ", "u", "p", " ", "’", " ", "s", "t", "r", "i", "n", "g"]
 
-Note that like ActiveSupport, it naively assumes if you have invalid UTF8
-characters, they are either Windows CP1251 or ISO8859-1. In practice this isn't
-a bad assumption, but may not always work.
+Note that, like ActiveSupport, it naively assumes if you have invalid UTF8
+characters, their encoding is either Windows CP1252 or ISO-8859-1. In practice
+this isn't a bad assumption, but may not always work.
 
 This library's `tidy_bytes` method is a little less than twice as fast as the
 one provided by ActiveSupport:
+
+
+    require "rubygems"
+    require "rbench"
+    require "active_support"
+    require "lib/utf8_utils"
+
+    TIMES = 20000
+
+    string = "\270\236\010\210\245"
+    ar_string = ActiveSupport::Multibyte::Chars.new(string)
+
+    RBench.run(TIMES) do
+
+      column :times
+      column :active_support
+      column :utf8_utils
+
+      report('tidy bytes', TIMES) do
+        active_support { ar_string.tidy_bytes }
+        utf8_utils { string.tidy_bytes }
+      end
+
+      summary 'Total'
+
+    end
+
 
                                | ACTIVE_SUPPORT | UTF8_UTILS |
     ----------------------------------------------------------

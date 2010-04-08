@@ -55,8 +55,8 @@ module UTF8Utils
         byte = bytes[index]
 
         is_continuation_byte = byte[7] == 1 && byte[6] == 0
-        ascii_byte = byte[7] == 0
-        leading_byte = byte[7] == 1 && byte[6] == 1
+        is_ascii_byte = byte[7] == 0
+        is_leading_byte = byte[7] == 1 && byte[6] == 1
 
         if is_continuation_byte
           if continuation_bytes_expected > 0
@@ -66,13 +66,13 @@ module UTF8Utils
             bytes[index] = tidy_byte(byte)
           end
         # ASCII byte
-        elsif ascii_byte
+        elsif is_ascii_byte
           if continuation_bytes_expected > 0
             # Expected continuation, got ASCII, so clean previous
             bytes[index - 1] = tidy_byte(bytes[index - 1])
             continuation_bytes_expected = 0
           end
-        elsif leading_byte
+        elsif is_leading_byte
           if continuation_bytes_expected > 0
             # Expected continuation, got leading, so clean previous
             bytes[index - 1] = tidy_byte(bytes[index - 1])
@@ -85,7 +85,7 @@ module UTF8Utils
           end
         end
         # Don't allow the string to terminate with a leading byte
-        if leading_byte && index == bytes.length - 1
+        if is_leading_byte && index == bytes.length - 1
           bytes[index] = tidy_byte(bytes.last)
         end
       end

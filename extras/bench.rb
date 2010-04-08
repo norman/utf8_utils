@@ -14,8 +14,8 @@ RBench.run(TIMES) do
   column :active_support
   column :utf8_utils
 
-  report 'tidy bytes', (TIMES).ceil do
-    active_support { ar_string.tidy_bytes.to_s }
+  report('tidy bytes', TIMES) do
+    active_support { ar_string.tidy_bytes }
     utf8_utils { string.tidy_bytes }
   end
 
