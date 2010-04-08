@@ -44,38 +44,11 @@ This library's `tidy_bytes` method is a little less than twice as fast as the
 one provided by ActiveSupport:
 
 
-    require "rubygems"
-    require "rbench"
-    require "active_support"
-    require "lib/utf8_utils"
-
-    TIMES = 20000
-
-    string = "\270\236\010\210\245"
-    ar_string = ActiveSupport::Multibyte::Chars.new(string)
-
-    RBench.run(TIMES) do
-
-      column :times
-      column :active_support
-      column :utf8_utils
-
-      report('tidy bytes', TIMES) do
-        active_support { ar_string.tidy_bytes }
-        utf8_utils { string.tidy_bytes }
-      end
-
-      summary 'Total'
-
-    end
-
-
                                | ACTIVE_SUPPORT | UTF8_UTILS |
     ----------------------------------------------------------
-    tidy bytes          x20000 |          1.008 |      0.650 |
+    tidy bytes          x20000 |          1.004 |      0.607 |
     ==========================================================
-    Total                      |          1.008 |      0.650 |
-
+    Total                      |          1.004 |      0.607 |
 
 ## Getting it
 
