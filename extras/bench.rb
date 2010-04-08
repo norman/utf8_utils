@@ -3,9 +3,9 @@ require "rbench"
 require "active_support"
 require "lib/utf8_utils"
 
-TIMES = 2000
+TIMES = 20000
 
-string = "Sim\xF3n Bol\xEDvar"
+string = "\270\236\010\210\245"
 ar_string = ActiveSupport::Multibyte::Chars.new(string)
 
 RBench.run(TIMES) do
@@ -16,7 +16,7 @@ RBench.run(TIMES) do
 
   report 'tidy bytes', (TIMES).ceil do
     active_support { ar_string.tidy_bytes.to_s }
-    utf8_utils { string.to_utf8_chars.tidy_bytes.to_s }
+    utf8_utils { string.tidy_bytes }
   end
 
   summary 'Total'

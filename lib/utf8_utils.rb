@@ -1,14 +1,8 @@
-require File.expand_path("../utf8_utils/byte",  __FILE__)
-require File.expand_path("../utf8_utils/char",  __FILE__)
-require File.expand_path("../utf8_utils/chars", __FILE__)
-
-# Wraps a string as an array of bytes and allows some naive cleanup operations
-# as a workaround for Ruby 1.9's crappy encoding support that throws exceptions
-# when attempting to access UTF8 strings with invalid characters.
+# Utilities for cleaning up UTF-8 strings with invalid characters.
 module UTF8Utils
 
-  # CP1251 decimal byte => UTF-8 approximation as an array of bytes
-  CP1251 = {
+  # CP1252 decimal byte => UTF-8 approximation as an array of bytes
+  CP1252 = {
     128 => [226, 130, 172],
     129 => nil,
     130 => [226, 128, 154],
@@ -43,27 +37,80 @@ module UTF8Utils
     159 => [197, 184]
   }
 
-end
+  # A mixin to Ruby's String class to add the {#tidy_bytes} and {#tidy_bytes!}
+  # methods.
+  module StringExt
 
-# Get an array of UTF8 charsfrom a string.
-class String
-  def to_utf8_chars
-    UTF8Utils::Chars.new self
-  end
-end
+    # Attempt to replace invalid UTF-8 bytes with valid ones. This method
+    # naively assumes if you have invalid UTF8 bytes, they are either Windows
+    # CP1251 or ISO8859-1. In practice this isn't a bad assumption, but may not
+    # always work.
+    def tidy_bytes
 
-class Fixnum
-  # Returns the offset of the first zero bit, reading from left to right.
-  def first_zero_bit
-    @first_zero_bit ||= if self[7] == 0 then 0
-    elsif self[6] == 0 then 1
-    elsif self[5] == 0 then 2
-    elsif self[4] == 0 then 3
-    elsif self[3] == 0 then 4
-    elsif self[2] == 0 then 5
-    elsif self[1] == 0 then 6
-    elsif self[0] == 0 then 7
-    else nil
+      bytes = unpack("C*")
+      continuation_bytes_expected = 0
+
+      bytes.each_index do |index|
+
+        byte = bytes[index]
+
+        is_continuation_byte = byte[7] == 1 && byte[6] == 0
+        ascii_byte = byte[7] == 0
+        leading_byte = byte[7] == 1 && byte[6] == 1
+
+        if is_continuation_byte
+          if continuation_bytes_expected > 0
+            continuation_bytes_expected = continuation_bytes_expected - 1
+          else
+            # Not expecting a continuation, so clean it
+            bytes[index] = tidy_byte(byte)
+          end
+        # ASCII byte
+        elsif ascii_byte
+          if continuation_bytes_expected > 0
+            # Expected continuation, got ASCII, so clean previous
+            bytes[index - 1] = tidy_byte(bytes[index - 1])
+            continuation_bytes_expected = 0
+          end
+        elsif leading_byte
+          if continuation_bytes_expected > 0
+            # Expected continuation, got leading, so clean previous
+            bytes[index - 1] = tidy_byte(bytes[index - 1])
+            continuation_bytes_expected = 0
+          end
+          continuation_bytes_expected =
+            if    byte[5] == 0 then 1
+            elsif byte[4] == 0 then 2
+            elsif byte[3] == 0 then 3
+          end
+        end
+        # Don't allow the string to terminate with a leading byte
+        if leading_byte && index == bytes.length - 1
+          bytes[index] = tidy_byte(bytes.last)
+        end
+      end
+      bytes.empty? ? "" : bytes.flatten.compact.pack("C*").unpack("U*").pack("U*")
+    end
+
+    # Tidy bytes in-place.
+    def tidy_bytes!
+      replace tidy_bytes
+    end
+
+    private
+
+    def tidy_byte(byte)
+      if UTF8Utils::CP1252.key? byte
+        UTF8Utils::CP1252[byte]
+      elsif byte < 192
+        [194, byte]
+      else
+        [195, byte - 64]
+      end
     end
   end
+end
+
+class String
+  include UTF8Utils::StringExt
 end
