@@ -1,6 +1,4 @@
 # encoding: utf-8
-require "rubygems"
-require "active_support"
 require "test/unit"
 require File.expand_path("../../lib/utf8_utils", __FILE__)
 
@@ -25,12 +23,6 @@ class UTF8UtilsTest < Test::Unit::TestCase
     "\xF1" => "ñ",  # Unused byte
     "\xFF" => "ÿ", # Restricted byte
   }
-  
-  def setup
-    # SINGLE_BYTE_CASES.each do |k, v|
-    #   SINGLE_BYTE_CASES[k] = ActiveSupport::Multibyte::Chars.new(k)
-    # end
-  end
 
   def test_should_handle_single_byte_cases
     SINGLE_BYTE_CASES.each do |bad, good|
@@ -42,7 +34,7 @@ class UTF8UtilsTest < Test::Unit::TestCase
       assert_equal "a#{good}", "a#{bad}".tidy_bytes
     end
   end
-  
+
   def test_should_tidy_leading_byte_followed_by_too_few_continuation_bytes
     string = "\xF0\xA5\xA4\x21"
     assert_equal "ð¥¤!", string.tidy_bytes
@@ -62,5 +54,10 @@ class UTF8UtilsTest < Test::Unit::TestCase
     assert_equal "ð¥¤¤¤", string.tidy_bytes(true)
   end
 
+  def test_should_tidy_bytes_in_place
+    string = "\xF0\xA5\xA4\x21"
+    string.tidy_bytes!
+    assert_equal "ð¥¤!", string
+  end
 
 end

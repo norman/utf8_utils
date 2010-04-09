@@ -68,6 +68,9 @@ one provided by ActiveSupport:
     # tidy bytes in-place
     string.tidy_bytes!
 
+    # assume string is 100% ISO-8859-1 or CP-1251 and recode it to UTF-8
+    good_string = bad_string.tidy_bytes(true)
+
 ## API Docs
 
 [http://norman.github.com/utf8_utils](http://norman.github.com/utf8_utils)

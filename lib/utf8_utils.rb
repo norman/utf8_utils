@@ -1,7 +1,7 @@
 # Utilities for cleaning up UTF-8 strings with invalid characters.
 module UTF8Utils
 
-  # CP1252 decimal byte => UTF-8 approximation as an array of bytes
+  # CP-1252 decimal byte => UTF-8 approximation as an array of bytes
   CP1252 = {
     128 => [226, 130, 172],
     129 => nil,
@@ -47,7 +47,7 @@ module UTF8Utils
     # always work.
     #
     # Passing +true+ will forcibly tidy all bytes, assuming that the string's
-    # encoding is CP1252 or ISO-8859-1.
+    # encoding is CP-1252 or ISO-8859-1.
     def tidy_bytes(force = false)
 
       if force
@@ -99,8 +99,8 @@ module UTF8Utils
     end
 
     # Tidy bytes in-place.
-    def tidy_bytes!
-      replace tidy_bytes
+    def tidy_bytes!(force = false)
+      replace tidy_bytes(force)
     end
 
     private
