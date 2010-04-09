@@ -47,9 +47,11 @@
 
 <p>It provides functionality that replaces <a href='http://api.rubyonrails.org/classes/ActiveSupport/Multibyte/Chars.html#M000977'>ActiveSupport&#8217;s <code>tidy_bytes</code> method</a>, with a faster algorithm that works on 1.8.6 - 1.9.x.</p>
 
-<p>I will be sending this as a patch to ActiveSupport; in the mean time you can access at <a href='github.com/norman/utf8_utils'>its home on Github</a>.</p>
+<p>I&#8217;ve sent this code <a href='https://rails.lighthouseapp.com/projects/8994/tickets/4350-tidy_bytes-fails-on-19x'>as a patch to ActiveSupport</a>; in the mean time you can access at <a href='github.com/norman/utf8_utils'>its home on Github</a>.</p>
 
 <h2 id='the_problem'>The Problem</h2>
+
+<p>Your application may have to deal with invalid UTF-8 strings that come from user input that is copied and pasted from Microsoft Word, and includes Windows-encoded &#8220;smart quotes,&#8221; or other characters. This is only one scenario; there are many ways your application could receive such input.</p>
 
 <p>Here&#8217;s what happens when you try to access a string with invalid UTF-8 characters in Ruby 1.9:</p>
 
@@ -60,21 +62,25 @@
         from /Users/norman/.rvm/rubies/ruby-1.9.1-p378/bin/irb:17:in `</span><span class='lt op'>&lt;</span><span class='main identifier id'>main</span><span class='gt op'>&gt;</span><span class='string val'>'
 </span></pre>
 
+<p>Ruby is quite particular about this - accessing the data in the string is difficult as almost all string access methods will die with this error.</p>
+
 <h2 id='the_solution'>The Solution</h2>
+
+<p>This library breaks the string down into an array of raw bytes, and cleans up the ones that are impossible UTF-8 sequences.</p>
 
 <pre class="code"><span class='ruby identifier id'>ruby</span><span class='minus op'>-</span><span class='float val'>1.9</span><span class='integer val'>.1</span><span class='minus op'>-</span><span class='p378 identifier id'>p378</span> <span class='gt op'>&gt;</span> <span class='string val'>&quot;my messed up \x92 string&quot;</span><span class='dot token'>.</span><span class='tidy_bytes identifier id'>tidy_bytes</span><span class='dot token'>.</span><span class='split identifier id'>split</span><span class='lparen token'>(</span><span class='regexp val'>//</span><span class='u identifier id'>u</span><span class='rparen token'>)</span>
  <span class='assign token'>=</span><span class='gt op'>&gt;</span> <span class='lbrack token'>[</span><span class='string val'>&quot;m&quot;</span><span class='comma token'>,</span> <span class='string val'>&quot;y&quot;</span><span class='comma token'>,</span> <span class='string val'>&quot; &quot;</span><span class='comma token'>,</span> <span class='string val'>&quot;m&quot;</span><span class='comma token'>,</span> <span class='string val'>&quot;e&quot;</span><span class='comma token'>,</span> <span class='string val'>&quot;s&quot;</span><span class='comma token'>,</span> <span class='string val'>&quot;s&quot;</span><span class='comma token'>,</span> <span class='string val'>&quot;e&quot;</span><span class='comma token'>,</span> <span class='string val'>&quot;d&quot;</span><span class='comma token'>,</span> <span class='string val'>&quot; &quot;</span><span class='comma token'>,</span> <span class='string val'>&quot;u&quot;</span><span class='comma token'>,</span> <span class='string val'>&quot;p&quot;</span><span class='comma token'>,</span> <span class='string val'>&quot; &quot;</span><span class='comma token'>,</span> <span class='string val'>&quot;’&quot;</span><span class='comma token'>,</span> <span class='string val'>&quot; &quot;</span><span class='comma token'>,</span> <span class='string val'>&quot;s&quot;</span><span class='comma token'>,</span> <span class='string val'>&quot;t&quot;</span><span class='comma token'>,</span> <span class='string val'>&quot;r&quot;</span><span class='comma token'>,</span> <span class='string val'>&quot;i&quot;</span><span class='comma token'>,</span> <span class='string val'>&quot;n&quot;</span><span class='comma token'>,</span> <span class='string val'>&quot;g&quot;</span><span class='rbrack token'>]</span>
 </pre>
 
-<p>Note that like ActiveSupport, it naively assumes if you have invalid UTF8 characters, they are either Windows CP1251 or ISO8859-1. In practice this isn&#8217;t a bad assumption, but may not always work.</p>
+<p>Note that, like ActiveSupport, it naively assumes if you have invalid UTF8 characters, their encoding is either Windows CP1252 or ISO-8859-1. In practice this isn&#8217;t a bad assumption, but may not always work.</p>
 
 <p>This library&#8217;s <code>tidy_bytes</code> method is a little less than twice as fast as the one provided by ActiveSupport:</p>
 
 <pre class="code">                           <span class='bitor op'>|</span> <span class='ACTIVE_SUPPORT constant id'>ACTIVE_SUPPORT</span> <span class='bitor op'>|</span> <span class='UTF8_UTILS constant id'>UTF8_UTILS</span> <span class='bitor op'>|</span>
 <span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span><span class='minus op'>-</span>
-<span class='tidy identifier id'>tidy</span> <span class='bytes identifier id'>bytes</span>          <span class='x20000 identifier id'>x20000</span> <span class='bitor op'>|</span>          <span class='float val'>1.008</span> <span class='bitor op'>|</span>      <span class='integer val'>0</span><span class='integer val'>.650</span> <span class='bitor op'>|</span>
+<span class='tidy identifier id'>tidy</span> <span class='bytes identifier id'>bytes</span>          <span class='x20000 identifier id'>x20000</span> <span class='bitor op'>|</span>          <span class='float val'>1.004</span> <span class='bitor op'>|</span>      <span class='integer val'>0</span><span class='integer val'>.607</span> <span class='bitor op'>|</span>
 <span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='eqq op'>===</span><span class='assign token'>=</span>
-<span class='Total constant id'>Total</span>                      <span class='bitor op'>|</span>          <span class='float val'>1.008</span> <span class='bitor op'>|</span>      <span class='integer val'>0</span><span class='integer val'>.650</span> <span class='bitor op'>|</span>
+<span class='Total constant id'>Total</span>                      <span class='bitor op'>|</span>          <span class='float val'>1.004</span> <span class='bitor op'>|</span>      <span class='integer val'>0</span><span class='integer val'>.607</span> <span class='bitor op'>|</span>
 </pre>
 
 <h2 id='getting_it'>Getting it</h2>
@@ -92,6 +98,9 @@
 
 <span class='comment val'># tidy bytes in-place</span>
 <span class='string identifier id'>string</span><span class='dot token'>.</span><span class='tidy_bytes! fid id'>tidy_bytes!</span>
+
+<span class='comment val'># assume string is 100% ISO-8859-1 or CP-1251 and recode it to UTF-8</span>
+<span class='good_string identifier id'>good_string</span> <span class='assign token'>=</span> <span class='bad_string identifier id'>bad_string</span><span class='dot token'>.</span><span class='tidy_bytes identifier id'>tidy_bytes</span><span class='lparen token'>(</span><span class='true true kw'>true</span><span class='rparen token'>)</span>
 </pre>
 
 <h2 id='api_docs'>API Docs</h2>
@@ -105,7 +114,7 @@
 <p>Copyright (c) 2010, released under the MIT license.</p></div></div>
     
     <div id="footer">
-  Generated on Thu Apr  8 00:14:28 2010 by 
+  Generated on Fri Apr  9 09:49:54 2010 by 
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool">yard</a>
   0.5.4 (ruby-1.8.7).
 </div>

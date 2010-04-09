@@ -90,7 +90,7 @@ A mixin to Ruby&#8217;s String class to add the <tt><a href="#tidy_bytes-instanc
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#tidy_bytes-instance_method" title="#tidy_bytes (instance method)">- (Object) <strong>tidy_bytes</strong> </a>
+      <a href="#tidy_bytes-instance_method" title="#tidy_bytes (instance method)">- (Object) <strong>tidy_bytes</strong>(force = false) </a>
     
 
     
@@ -113,7 +113,7 @@ Attempt to replace invalid UTF-8 bytes with valid ones.
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#tidy_bytes%21-instance_method" title="#tidy_bytes! (instance method)">- (Object) <strong>tidy_bytes!</strong> </a>
+      <a href="#tidy_bytes%21-instance_method" title="#tidy_bytes! (instance method)">- (Object) <strong>tidy_bytes!</strong>(force = false) </a>
     
 
     
@@ -145,7 +145,7 @@ Tidy bytes in-place.
       <div class="method_details first">
   <p class="signature first" id="tidy_bytes-instance_method">
   
-    - (<tt>Object</tt>) <strong>tidy_bytes</strong> 
+    - (<tt>Object</tt>) <strong>tidy_bytes</strong>(force = false) 
   
 
   
@@ -156,6 +156,10 @@ Attempt to replace invalid UTF-8 bytes with valid ones. This method naively
 assumes if you have invalid UTF8 bytes, they are either Windows CP1251 or
 ISO8859-1. In practice this isn&#8217;t a bad assumption, but may not
 always work.
+</p>
+<p>
+Passing <tt>true</tt> will forcibly tidy all bytes, assuming that the
+string&#8217;s encoding is CP-1252 or ISO-8859-1.
 </p>
 
 
@@ -169,9 +173,6 @@ always work.
       <pre class="lines">
 
 
-48
-49
-50
 51
 52
 53
@@ -214,53 +215,62 @@ always work.
 90
 91
 92
-93</pre>
+93
+94
+95
+96
+97
+98
+99</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/utf8_utils.rb', line 48</span>
+      <pre class="code"><span class="info file"># File 'lib/utf8_utils.rb', line 51</span>
 
-<span class='def def kw'>def</span> <span class='tidy_bytes identifier id'>tidy_bytes</span>
+<span class='def def kw'>def</span> <span class='tidy_bytes identifier id'>tidy_bytes</span><span class='lparen token'>(</span><span class='force identifier id'>force</span> <span class='assign token'>=</span> <span class='false false kw'>false</span><span class='rparen token'>)</span>
+
+  <span class='if if kw'>if</span> <span class='force identifier id'>force</span>
+    <span class='return return kw'>return</span> <span class='unpack identifier id'>unpack</span><span class='lparen token'>(</span><span class='string val'>&quot;C*&quot;</span><span class='rparen token'>)</span><span class='dot token'>.</span><span class='map identifier id'>map</span> <span class='do do kw'>do</span> <span class='bitor op'>|</span><span class='b identifier id'>b</span><span class='bitor op'>|</span>
+      <span class='tidy_byte identifier id'>tidy_byte</span><span class='lparen token'>(</span><span class='b identifier id'>b</span><span class='rparen token'>)</span>
+    <span class='end end kw'>end</span><span class='dot token'>.</span><span class='flatten identifier id'>flatten</span><span class='dot token'>.</span><span class='compact identifier id'>compact</span><span class='dot token'>.</span><span class='pack identifier id'>pack</span><span class='lparen token'>(</span><span class='string val'>&quot;C*&quot;</span><span class='rparen token'>)</span><span class='dot token'>.</span><span class='unpack identifier id'>unpack</span><span class='lparen token'>(</span><span class='string val'>&quot;U*&quot;</span><span class='rparen token'>)</span><span class='dot token'>.</span><span class='pack identifier id'>pack</span><span class='lparen token'>(</span><span class='string val'>&quot;U*&quot;</span><span class='rparen token'>)</span>
+  <span class='end end kw'>end</span>
 
   <span class='bytes identifier id'>bytes</span> <span class='assign token'>=</span> <span class='unpack identifier id'>unpack</span><span class='lparen token'>(</span><span class='string val'>&quot;C*&quot;</span><span class='rparen token'>)</span>
-  <span class='continuation_bytes_expected identifier id'>continuation_bytes_expected</span> <span class='assign token'>=</span> <span class='integer val'>0</span>
+  <span class='conts_expected identifier id'>conts_expected</span> <span class='assign token'>=</span> <span class='integer val'>0</span>
+  <span class='last_lead identifier id'>last_lead</span> <span class='assign token'>=</span> <span class='integer val'>0</span>
 
-  <span class='bytes identifier id'>bytes</span><span class='dot token'>.</span><span class='each_index identifier id'>each_index</span> <span class='do do kw'>do</span> <span class='bitor op'>|</span><span class='index identifier id'>index</span><span class='bitor op'>|</span>
+  <span class='bytes identifier id'>bytes</span><span class='dot token'>.</span><span class='each_index identifier id'>each_index</span> <span class='do do kw'>do</span> <span class='bitor op'>|</span><span class='i identifier id'>i</span><span class='bitor op'>|</span>
 
-    <span class='byte identifier id'>byte</span> <span class='assign token'>=</span> <span class='bytes identifier id'>bytes</span><span class='lbrack token'>[</span><span class='index identifier id'>index</span><span class='rbrack token'>]</span>
+    <span class='byte identifier id'>byte</span>          <span class='assign token'>=</span> <span class='bytes identifier id'>bytes</span><span class='lbrack token'>[</span><span class='i identifier id'>i</span><span class='rbrack token'>]</span>
+    <span class='is_ascii identifier id'>is_ascii</span>      <span class='assign token'>=</span> <span class='byte identifier id'>byte</span> <span class='lt op'>&lt;</span> <span class='integer val'>128</span>
+    <span class='is_cont identifier id'>is_cont</span>       <span class='assign token'>=</span> <span class='byte identifier id'>byte</span> <span class='gt op'>&gt;</span> <span class='integer val'>127</span> <span class='andop op'>&amp;&amp;</span> <span class='byte identifier id'>byte</span> <span class='lt op'>&lt;</span> <span class='integer val'>192</span>
+    <span class='is_lead identifier id'>is_lead</span>       <span class='assign token'>=</span> <span class='byte identifier id'>byte</span> <span class='gt op'>&gt;</span> <span class='integer val'>191</span> <span class='andop op'>&amp;&amp;</span> <span class='byte identifier id'>byte</span> <span class='lt op'>&lt;</span> <span class='integer val'>245</span>
+    <span class='is_unused identifier id'>is_unused</span>     <span class='assign token'>=</span> <span class='byte identifier id'>byte</span> <span class='gt op'>&gt;</span> <span class='integer val'>240</span>
+    <span class='is_restricted identifier id'>is_restricted</span> <span class='assign token'>=</span> <span class='byte identifier id'>byte</span> <span class='gt op'>&gt;</span> <span class='integer val'>244</span>
 
-    <span class='is_continuation_byte identifier id'>is_continuation_byte</span> <span class='assign token'>=</span> <span class='byte identifier id'>byte</span><span class='lbrack token'>[</span><span class='integer val'>7</span><span class='rbrack token'>]</span> <span class='eq op'>==</span> <span class='integer val'>1</span> <span class='andop op'>&amp;&amp;</span> <span class='byte identifier id'>byte</span><span class='lbrack token'>[</span><span class='integer val'>6</span><span class='rbrack token'>]</span> <span class='eq op'>==</span> <span class='integer val'>0</span>
-    <span class='ascii_byte identifier id'>ascii_byte</span> <span class='assign token'>=</span> <span class='byte identifier id'>byte</span><span class='lbrack token'>[</span><span class='integer val'>7</span><span class='rbrack token'>]</span> <span class='eq op'>==</span> <span class='integer val'>0</span>
-    <span class='leading_byte identifier id'>leading_byte</span> <span class='assign token'>=</span> <span class='byte identifier id'>byte</span><span class='lbrack token'>[</span><span class='integer val'>7</span><span class='rbrack token'>]</span> <span class='eq op'>==</span> <span class='integer val'>1</span> <span class='andop op'>&amp;&amp;</span> <span class='byte identifier id'>byte</span><span class='lbrack token'>[</span><span class='integer val'>6</span><span class='rbrack token'>]</span> <span class='eq op'>==</span> <span class='integer val'>1</span>
-
-    <span class='if if kw'>if</span> <span class='is_continuation_byte identifier id'>is_continuation_byte</span>
-      <span class='if if kw'>if</span> <span class='continuation_bytes_expected identifier id'>continuation_bytes_expected</span> <span class='gt op'>&gt;</span> <span class='integer val'>0</span>
-        <span class='continuation_bytes_expected identifier id'>continuation_bytes_expected</span> <span class='assign token'>=</span> <span class='continuation_bytes_expected identifier id'>continuation_bytes_expected</span> <span class='minus op'>-</span> <span class='integer val'>1</span>
-      <span class='else else kw'>else</span>
-        <span class='comment val'># Not expecting a continuation, so clean it</span>
-        <span class='bytes identifier id'>bytes</span><span class='lbrack token'>[</span><span class='index identifier id'>index</span><span class='rbrack token'>]</span> <span class='assign token'>=</span> <span class='tidy_byte identifier id'>tidy_byte</span><span class='lparen token'>(</span><span class='byte identifier id'>byte</span><span class='rparen token'>)</span>
+    <span class='comment val'># Impossible or highly unlikely byte? Clean it.</span>
+    <span class='if if kw'>if</span> <span class='is_unused identifier id'>is_unused</span> <span class='orop op'>||</span> <span class='is_restricted identifier id'>is_restricted</span>
+      <span class='bytes identifier id'>bytes</span><span class='lbrack token'>[</span><span class='i identifier id'>i</span><span class='rbrack token'>]</span> <span class='assign token'>=</span> <span class='tidy_byte identifier id'>tidy_byte</span><span class='lparen token'>(</span><span class='byte identifier id'>byte</span><span class='rparen token'>)</span>
+    <span class='elsif elsif kw'>elsif</span> <span class='is_cont identifier id'>is_cont</span>
+      <span class='comment val'># Not expecting contination byte? Clean up. Otherwise, now expect one less.</span>
+      <span class='conts_expected identifier id'>conts_expected</span> <span class='eq op'>==</span> <span class='integer val'>0</span> <span class='question op'>?</span> <span class='bytes identifier id'>bytes</span><span class='lbrack token'>[</span><span class='i identifier id'>i</span><span class='rbrack token'>]</span> <span class='assign token'>=</span> <span class='tidy_byte identifier id'>tidy_byte</span><span class='lparen token'>(</span><span class='byte identifier id'>byte</span><span class='rparen token'>)</span> <span class='colon op'>:</span> <span class='conts_expected identifier id'>conts_expected</span> <span class='opasgn op'>-=</span> <span class='integer val'>1</span>
+    <span class='else else kw'>else</span>
+      <span class='if if kw'>if</span> <span class='conts_expected identifier id'>conts_expected</span> <span class='gt op'>&gt;</span> <span class='integer val'>0</span>
+        <span class='comment val'># Expected continuation, but got ASCII or leading? Clean backwards up to</span>
+        <span class='comment val'># the leading byte.</span>
+        <span class='lparen token'>(</span><span class='float val'>1</span><span class='dot2 op'>..</span><span class='lparen token'>(</span><span class='i identifier id'>i</span> <span class='minus op'>-</span> <span class='last_lead identifier id'>last_lead</span><span class='rparen token'>)</span><span class='rparen token'>)</span><span class='dot token'>.</span><span class='each identifier id'>each</span> <span class='lbrace token'>{</span><span class='bitor op'>|</span><span class='j identifier id'>j</span><span class='bitor op'>|</span> <span class='bytes identifier id'>bytes</span><span class='lbrack token'>[</span><span class='i identifier id'>i</span> <span class='minus op'>-</span> <span class='j identifier id'>j</span><span class='rbrack token'>]</span> <span class='assign token'>=</span> <span class='tidy_byte identifier id'>tidy_byte</span><span class='lparen token'>(</span><span class='bytes identifier id'>bytes</span><span class='lbrack token'>[</span><span class='i identifier id'>i</span> <span class='minus op'>-</span> <span class='j identifier id'>j</span><span class='rbrack token'>]</span><span class='rparen token'>)</span><span class='rbrace token'>}</span>
+        <span class='conts_expected identifier id'>conts_expected</span> <span class='assign token'>=</span> <span class='integer val'>0</span>
       <span class='end end kw'>end</span>
-    <span class='comment val'># ASCII byte</span>
-    <span class='elsif elsif kw'>elsif</span> <span class='ascii_byte identifier id'>ascii_byte</span>
-      <span class='if if kw'>if</span> <span class='continuation_bytes_expected identifier id'>continuation_bytes_expected</span> <span class='gt op'>&gt;</span> <span class='integer val'>0</span>
-        <span class='comment val'># Expected continuation, got ASCII, so clean previous</span>
-        <span class='bytes identifier id'>bytes</span><span class='lbrack token'>[</span><span class='index identifier id'>index</span> <span class='minus op'>-</span> <span class='integer val'>1</span><span class='rbrack token'>]</span> <span class='assign token'>=</span> <span class='tidy_byte identifier id'>tidy_byte</span><span class='lparen token'>(</span><span class='bytes identifier id'>bytes</span><span class='lbrack token'>[</span><span class='index identifier id'>index</span> <span class='minus op'>-</span> <span class='integer val'>1</span><span class='rbrack token'>]</span><span class='rparen token'>)</span>
-        <span class='continuation_bytes_expected identifier id'>continuation_bytes_expected</span> <span class='assign token'>=</span> <span class='integer val'>0</span>
+      <span class='if if kw'>if</span> <span class='is_lead identifier id'>is_lead</span>
+        <span class='comment val'># Final byte is leading? Clean it.</span>
+        <span class='if if kw'>if</span> <span class='i identifier id'>i</span> <span class='eq op'>==</span> <span class='bytes identifier id'>bytes</span><span class='dot token'>.</span><span class='length identifier id'>length</span> <span class='minus op'>-</span> <span class='integer val'>1</span>
+          <span class='bytes identifier id'>bytes</span><span class='lbrack token'>[</span><span class='i identifier id'>i</span><span class='rbrack token'>]</span> <span class='assign token'>=</span> <span class='tidy_byte identifier id'>tidy_byte</span><span class='lparen token'>(</span><span class='bytes identifier id'>bytes</span><span class='dot token'>.</span><span class='last identifier id'>last</span><span class='rparen token'>)</span>
+        <span class='else else kw'>else</span>
+          <span class='comment val'># Valid leading byte? Expect continuations determined by position of</span>
+          <span class='comment val'># first zero bit, with max of 3.</span>
+          <span class='conts_expected identifier id'>conts_expected</span> <span class='assign token'>=</span> <span class='byte identifier id'>byte</span> <span class='lt op'>&lt;</span> <span class='integer val'>224</span> <span class='question op'>?</span> <span class='integer val'>1</span> <span class='colon op'>:</span> <span class='byte identifier id'>byte</span> <span class='lt op'>&lt;</span> <span class='integer val'>240</span> <span class='question op'>?</span> <span class='integer val'>2</span> <span class='colon op'>:</span> <span class='integer val'>3</span>
+          <span class='last_lead identifier id'>last_lead</span> <span class='assign token'>=</span> <span class='i identifier id'>i</span>
+        <span class='end end kw'>end</span>
       <span class='end end kw'>end</span>
-    <span class='elsif elsif kw'>elsif</span> <span class='leading_byte identifier id'>leading_byte</span>
-      <span class='if if kw'>if</span> <span class='continuation_bytes_expected identifier id'>continuation_bytes_expected</span> <span class='gt op'>&gt;</span> <span class='integer val'>0</span>
-        <span class='comment val'># Expected continuation, got leading, so clean previous</span>
-        <span class='bytes identifier id'>bytes</span><span class='lbrack token'>[</span><span class='index identifier id'>index</span> <span class='minus op'>-</span> <span class='integer val'>1</span><span class='rbrack token'>]</span> <span class='assign token'>=</span> <span class='tidy_byte identifier id'>tidy_byte</span><span class='lparen token'>(</span><span class='bytes identifier id'>bytes</span><span class='lbrack token'>[</span><span class='index identifier id'>index</span> <span class='minus op'>-</span> <span class='integer val'>1</span><span class='rbrack token'>]</span><span class='rparen token'>)</span>
-        <span class='continuation_bytes_expected identifier id'>continuation_bytes_expected</span> <span class='assign token'>=</span> <span class='integer val'>0</span>
-      <span class='end end kw'>end</span>
-      <span class='continuation_bytes_expected identifier id'>continuation_bytes_expected</span> <span class='assign token'>=</span>
-        <span class='if if kw'>if</span>    <span class='byte identifier id'>byte</span><span class='lbrack token'>[</span><span class='integer val'>5</span><span class='rbrack token'>]</span> <span class='eq op'>==</span> <span class='integer val'>0</span> <span class='then then kw'>then</span> <span class='integer val'>1</span>
-        <span class='elsif elsif kw'>elsif</span> <span class='byte identifier id'>byte</span><span class='lbrack token'>[</span><span class='integer val'>4</span><span class='rbrack token'>]</span> <span class='eq op'>==</span> <span class='integer val'>0</span> <span class='then then kw'>then</span> <span class='integer val'>2</span>
-        <span class='elsif elsif kw'>elsif</span> <span class='byte identifier id'>byte</span><span class='lbrack token'>[</span><span class='integer val'>3</span><span class='rbrack token'>]</span> <span class='eq op'>==</span> <span class='integer val'>0</span> <span class='then then kw'>then</span> <span class='integer val'>3</span>
-      <span class='end end kw'>end</span>
-    <span class='end end kw'>end</span>
-    <span class='comment val'># Don't allow the string to terminate with a leading byte</span>
-    <span class='if if kw'>if</span> <span class='leading_byte identifier id'>leading_byte</span> <span class='andop op'>&amp;&amp;</span> <span class='index identifier id'>index</span> <span class='eq op'>==</span> <span class='bytes identifier id'>bytes</span><span class='dot token'>.</span><span class='length identifier id'>length</span> <span class='minus op'>-</span> <span class='integer val'>1</span>
-      <span class='bytes identifier id'>bytes</span><span class='lbrack token'>[</span><span class='index identifier id'>index</span><span class='rbrack token'>]</span> <span class='assign token'>=</span> <span class='tidy_byte identifier id'>tidy_byte</span><span class='lparen token'>(</span><span class='bytes identifier id'>bytes</span><span class='dot token'>.</span><span class='last identifier id'>last</span><span class='rparen token'>)</span>
     <span class='end end kw'>end</span>
   <span class='end end kw'>end</span>
   <span class='bytes identifier id'>bytes</span><span class='dot token'>.</span><span class='empty? fid id'>empty?</span> <span class='integer val'>? </span><span class='string val'>&quot;&quot;</span> <span class='colon op'>:</span> <span class='bytes identifier id'>bytes</span><span class='dot token'>.</span><span class='flatten identifier id'>flatten</span><span class='dot token'>.</span><span class='compact identifier id'>compact</span><span class='dot token'>.</span><span class='pack identifier id'>pack</span><span class='lparen token'>(</span><span class='string val'>&quot;C*&quot;</span><span class='rparen token'>)</span><span class='dot token'>.</span><span class='unpack identifier id'>unpack</span><span class='lparen token'>(</span><span class='string val'>&quot;U*&quot;</span><span class='rparen token'>)</span><span class='dot token'>.</span><span class='pack identifier id'>pack</span><span class='lparen token'>(</span><span class='string val'>&quot;U*&quot;</span><span class='rparen token'>)</span>
@@ -274,7 +284,7 @@ always work.
       <div class="method_details ">
   <p class="signature " id="tidy_bytes!-instance_method">
   
-    - (<tt>Object</tt>) <strong>tidy_bytes!</strong> 
+    - (<tt>Object</tt>) <strong>tidy_bytes!</strong>(force = false) 
   
 
   
@@ -295,15 +305,15 @@ Tidy bytes in-place.
       <pre class="lines">
 
 
-96
-97
-98</pre>
+102
+103
+104</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'lib/utf8_utils.rb', line 96</span>
+      <pre class="code"><span class="info file"># File 'lib/utf8_utils.rb', line 102</span>
 
-<span class='def def kw'>def</span> <span class='tidy_bytes! fid id'>tidy_bytes!</span>
-  <span class='replace identifier id'>replace</span> <span class='tidy_bytes identifier id'>tidy_bytes</span>
+<span class='def def kw'>def</span> <span class='tidy_bytes! fid id'>tidy_bytes!</span><span class='lparen token'>(</span><span class='force identifier id'>force</span> <span class='assign token'>=</span> <span class='false false kw'>false</span><span class='rparen token'>)</span>
+  <span class='replace identifier id'>replace</span> <span class='tidy_bytes identifier id'>tidy_bytes</span><span class='lparen token'>(</span><span class='force identifier id'>force</span><span class='rparen token'>)</span>
 <span class='end end kw'>end</span>
 </pre>
     </td>
@@ -316,7 +326,7 @@ Tidy bytes in-place.
 </div>
     
     <div id="footer">
-  Generated on Thu Apr  8 00:14:28 2010 by 
+  Generated on Fri Apr  9 09:49:54 2010 by 
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool">yard</a>
   0.5.4 (ruby-1.8.7).
 </div>
