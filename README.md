@@ -2,13 +2,13 @@
 
 This library provides a means of cleaning UTF8 strings with invalid characters.
 
-It provides functionality that replaces [ActiveSupport's `tidy_bytes`
+It provides functionality that replaces [ActiveSupport's 2.3's tidy_bytes
 method](http://api.rubyonrails.org/classes/ActiveSupport/Multibyte/Chars.html#M000977),
 with a faster algorithm that works on 1.8.6 - 1.9.x.
 
-I've sent this code [as a patch to
-ActiveSupport](https://rails.lighthouseapp.com/projects/8994/tickets/4350-tidy_bytes-fails-on-19x);
-in the mean time you can access at [its home on
+This code has been [added to Rails
+3.0.0.beta3](http://github.com/rails/rails/commit/e416f1d0ab71e3e720e147e5d0e7f6e8b36516a5),
+if you are using a prior version of Rails you can access at [its home on
 Github](github.com/norman/utf8_utils).
 
 ## The Problem
