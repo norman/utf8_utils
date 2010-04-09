@@ -43,7 +43,7 @@ module UTF8Utils
 
     # Attempt to replace invalid UTF-8 bytes with valid ones. This method
     # naively assumes if you have invalid UTF8 bytes, they are either Windows
-    # CP1251 or ISO8859-1. In practice this isn't a bad assumption, but may not
+    # CP-1252 or ISO8859-1. In practice this isn't a bad assumption, but may not
     # always work.
     #
     # Passing +true+ will forcibly tidy all bytes, assuming that the string's
